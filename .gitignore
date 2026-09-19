@@ -14,6 +14,7 @@ portable-staging/
 
 # Local data (trained model + personal browsing history)
 server/data/
+server/generated/
 
 # Runtime & OS noise
 .env
