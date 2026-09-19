@@ -1,0 +1,69 @@
+{
+  "name": "galaxypron-desktop",
+  "version": "1.0.0",
+  "description": "galaxypron - Edge AI Agent (single-file portable desktop app)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "prepare:backend": "node prepare-backend.js",
+    "prepare:backend:public": "node prepare-backend.js --public",
+    "dist": "electron-builder --win portable",
+    "dist:win": "electron-builder --win portable",
+    "dist:public": "node prepare-backend.js --public && electron-builder --win portable",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:linux": "electron-builder --linux AppImage deb"
+  },
+  "build": {
+    "appId": "com.galaxypron.app",
+    "productName": "galaxypron",
+    "asar": true,
+    "compression": "maximum",
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png",
+      "icon.ico"
+    ],
+    "extraResources": [
+      {
+        "from": "portable-staging/backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "galaxypron-portable.exe"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "icon.png",
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "icon.png",
+      "category": "Utility",
+      "synopsis": "galaxypron Edge AI Agent"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}

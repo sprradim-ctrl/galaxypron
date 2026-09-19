@@ -1,0 +1,20 @@
+{
+  "name": "galaxypron-edge-ai-agent",
+  "version": "1.0.0",
+  "description": "AI Agent that works with and learns from Microsoft Edge",
+  "main": "server/app.py",
+  "scripts": {
+    "start": "python server/app.py",
+    "install-deps": "pip install -r requirements.txt",
+    "build-extension": "cd extension && npm run build",
+    "dev": "python server/app.py --dev"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {},
+  "keywords": ["ai", "agent", "edge", "browser", "machine-learning"],
+  "author": "AI Agent Developer",
+  "license": "MIT"
+}

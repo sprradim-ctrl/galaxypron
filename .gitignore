@@ -1,0 +1,25 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Node / Electron build artifacts
+node_modules/
+dist/
+dist-public/
+portable-staging/
+
+# Local data (trained model + personal browsing history)
+server/data/
+
+# Runtime & OS noise
+.env
+.DS_Store
+Thumbs.db
+*.log
+
+# opencode
+.opencode/

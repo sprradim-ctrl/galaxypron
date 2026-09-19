@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>galaxypron · Stats</title>
+    <meta name="color-scheme" content="dark">
+    <style>
+        :root {
+            --bg: #0b0d18;
+            --panel: #141830;
+            --panel-2: #1a1f3d;
+            --text: #e8ecff;
+            --muted: #9aa3c7;
+            --accent: #34d399;
+            --accent2: #38bdf8;
+            --danger: #f87171;
+            --border: rgba(255,255,255,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        header {
+            position: sticky; top: 0; z-index: 10;
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px;
+            background: rgba(11,13,24,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-size: 22px; }
+        header h1 { font-size: 18px; font-weight: 700; }
+        header .spacer { flex: 1; }
+        header a { color: var(--accent); font-size: 13px; text-decoration: none; font-weight: 600; }
+        main { max-width: 640px; margin: 0 auto; padding: 14px 14px 40px; }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .card h2 { font-size: 15px; margin-bottom: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .card h2 .badge { font-size: 11px; padding: 3px 8px; border-radius: 999px; }
+        .badge.on { background: rgba(52,211,153,0.15); color: var(--accent); }
+        .badge.off { background: rgba(148,163,184,0.15); color: var(--muted); }
+        .narrative { font-size: 14px; color: var(--text); background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(56,189,248,0.12)); padding: 14px; border-radius: 12px; }
+        .narrative em { color: var(--accent); font-style: normal; font-weight: 700; }
+        .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+        .kpi { background: var(--panel-2); border-radius: 12px; padding: 10px; text-align: center; }
+        .kpi .num { font-size: 20px; font-weight: 800; color: var(--accent); }
+        .kpi .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .bar-row { margin-bottom: 8px; }
+        .bar-row .top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; gap: 8px; }
+        .bar-row .top .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bar-row .top .count { color: var(--muted); flex-shrink: 0; }
+        .bar { height: 8px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; }
+        .bar div { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 7px 12px; font-size: 13px; }
+        .chip b { color: var(--accent); }
+        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .mini-days .day { text-align: center; }
+        .mini-days .day .dbar { height: 40px; background: rgba(255,255,255,0.07); border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; margin-top: 6px; }
+        .mini-days .day .dbar div { width: 100%; background: linear-gradient(180deg, var(--accent2), var(--accent)); border-radius: 6px; }
+        .mini-days .day span { font-size: 10px; color: var(--muted); }
+        .rows .row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .rows .row:last-child { border-bottom: none; }
+        .rows .row span:last-child { color: var(--accent); font-weight: 700; }
+        .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 18px 0; }
+        footer { text-align: center; color: var(--muted); font-size: 11px; padding: 10px 0 30px; }
+        @media (min-width: 480px) { main { padding-top: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <span class="logo">🪐</span>
+        <h1>galaxypron stats</h1>
+        <span class="spacer"></span>
+        <a href="/">Full app ↗</a>
+    </header>
+    <main>
+        <div class="card"><div id="narrative" class="narrative">Loading weekly report…</div></div>
+        <div class="card">
+            <h2>🧠 This week</h2>
+            <div class="kpis">
+                <div class="kpi"><div class="num" id="k-visits">—</div><div class="lbl">Visits</div></div>
+                <div class="kpi"><div class="num" id="k-domains">—</div><div class="lbl">Domains</div></div>
+                <div class="kpi"><div class="num" id="k-chats">—</div><div class="lbl">Chats</div></div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>🌐 Top sites this week</h2>
+            <div id="top-sites"><div class="empty">No data this week yet.</div></div>
+        </div>
+        <div class="card">
+            <h2>🏷️ Interests</h2>
+            <div id="interests" class="chips"><div class="empty">Still learning…</div></div>
+        </div>
+        <div class="card">
+            <h2>⏰ Your hours</h2>
+            <div id="hours"><div class="empty">No visits to chart yet.</div></div>
+        </div>
+        <div class="card">
+            <h2>📅 Busiest days</h2>
+            <div id="days" class="mini-days"></div>
+        </div>
+        <div class="card">
+            <h2>⚙️ Brain status <span class="badge off" id="trainer-badge">…</span></h2>
+            <div class="rows" id="brain-rows"></div>
+        </div>
+        <footer>galaxypron · data refreshes every few seconds</footer>
+    </main>
+
+    <script>
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+        function fmt(n) {
+            n = Number(n) || 0;
+            return n.toLocaleString('en-US');
+        }
+        function bars(container, items, max) {
+            const top = max || Math.max(1, ...items.map(i => i.count));
+            container.innerHTML = items.map(i =>
+                `<div class="bar-row">
+                    <div class="top"><span class="label">${esc(i.domain || i.label)}</span><span class="count">${fmt(i.count)}</span></div>
+                    <div class="bar"><div style="width:${(i.count / top) * 100}%"></div></div>
+                </div>`).join('');
+        }
+        async function refresh() {
+            try {
+                const r = await fetch('/api/report/weekly');
+                const d = await r.json();
+                document.getElementById('narrative').innerHTML = esc(d.narrative);
+                document.getElementById('k-visits').textContent = fmt(d.week_visits);
+                document.getElementById('k-domains').textContent = fmt(d.unique_domains);
+                document.getElementById('k-chats').textContent = fmt(d.chats_this_week);
+
+                const ts = document.getElementById('top-sites');
+                if (d.top_domains && d.top_domains.length) bars(ts, d.top_domains);
+                else ts.innerHTML = '<div class="empty">No data this week yet.</div>';
+
+                const it = document.getElementById('interests');
+                if (d.categories && d.categories.length) {
+                    it.innerHTML = d.categories.map(c =>
+                        `<span class="chip">${esc(c.label)} <b>${fmt(c.count)}</b></span>`).join('');
+                }
+
+                const h = document.getElementById('hours');
+                if (d.hourly && d.hourly.length) {
+                    const mx = Math.max(1, ...d.hourly.map(i => i.count));
+                    h.innerHTML = d.hourly.map(i =>
+                        `<div class="bar-row">
+                            <div class="top"><span class="label">${esc(i.hour)}</span><span class="count">${fmt(i.count)}</span></div>
+                            <div class="bar"><div style="width:${(i.count / mx) * 100}%"></div></div>
+                        </div>`).join('');
+                } else h.innerHTML = '<div class="empty">No visits to chart yet.</div>';
+
+                const days = document.getElementById('days');
+                const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const counts = {};
+                (d.weekdays || []).forEach(w => counts[w.label.slice(0, 3)] = w.count);
+                const mxD = Math.max(1, ...Object.values(counts));
+                days.innerHTML = names.map(n => {
+                    const c = counts[n] || 0;
+                    return `<div class="day"><span>${n}</span><div class="dbar"><div style="height:${(c / mxD) * 100}%"></div></div></div>`;
+                }).join('');
+
+                const badge = document.getElementById('trainer-badge');
+                const t = d.trainer || {};
+                badge.className = 'badge ' + (t.running ? 'on' : 'off');
+                badge.textContent = t.running ? 'training' : 'paused';
+                const loss = t.last_loss != null ? Number(t.last_loss).toFixed(4) : '—';
+                const rows = [
+                    ['Device', t.device || 'cpu'],
+                    ['Wikipedia articles', fmt(t.articles_ingested)],
+                    ['Words known', fmt(t.vocabulary_size)],
+                    ['Words trained', fmt(t.words_trained)],
+                    ['Avg loss', loss],
+                    ['Top concepts', (t.top_words || []).join(', ') || '—'],
+                ];
+                document.getElementById('brain-rows').innerHTML = rows.map(([k, v]) =>
+                    `<div class="row"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('');
+            } catch (e) {
+                document.getElementById('narrative').innerHTML = '<div class="empty">Can't reach galaxypron.</div>';
+            }
+        }
+        refresh();
+        setInterval(refresh, 5000);
+    </script>
+</body>
+</html>

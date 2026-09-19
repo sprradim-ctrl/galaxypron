@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>galaxypron</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header>
+            <div class="logo">🪐</div>
+            <h1>galaxypron</h1>
+            <p>Edge AI Agent</p>
+        </header>
+
+        <div class="status">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Connecting...</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-value" id="stat-events">0</span>
+                <span class="stat-label">Events</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="stat-learned">0</span>
+                <span class="stat-label">Patterns</span>
+            </div>
+        </div>
+
+        <button id="toggle-btn" class="toggle-btn active">Learning Active</button>
+        <button id="open-dashboard" class="dashboard-btn">Open Dashboard</button>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>

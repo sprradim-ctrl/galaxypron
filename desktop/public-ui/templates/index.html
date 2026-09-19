@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>galaxypron</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='3' width='20' height='14' rx='2' fill='%2334d399'/%3E%3Crect x='4' y='5' width='16' height='10' rx='1' fill='%23062b21'/%3E%3Cpath d='M9 21h6M12 17v4' stroke='%2334d399' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/static/css/style.css?v=gpu4">
+</head>
+<body>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <button class="new-chat-btn" id="new-chat-btn">
+                    <svg viewBox="0 0 24 24" class="pencil-icon"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>New chat</span>
+                </button>
+                <div class="chat-history-label">Conversations</div>
+                <nav class="chat-history" id="chat-history"></nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <button class="nav-item" data-view="learning">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                    <span>Learning</span>
+                </button>
+                <button class="nav-item settings-btn" data-view="settings">
+                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z" fill="currentColor"/></svg>
+                    <span>Settings</span>
+                </button>
+                <button class="nav-item" id="mobile-btn" title="Open the stats page on your phone (same LAN)">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 1h-8A2.5 2.5 0 005 3.5v17A2.5 2.5 0 007.5 23h8a2.5 2.5 0 002.5-2.5v-17A2.5 2.5 0 0015.5 1zm-4 20a1 1 0 110-2 1 1 0 010 2zm5-4h-10v-11h10v11z" fill="currentColor"/></svg>
+                    <span>On phone</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+
+            <!-- Chat View -->
+            <section id="view-chat" class="view active">
+                <header class="topbar">
+                    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                        <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="currentColor"/></svg>
+                    </button>
+                    <div class="brand">
+                        <span class="brand-logo">🪐</span>
+                        <span class="brand-name">galaxypron</span>
+                        <span class="status-dot" id="status-dot"></span>
+                    </div>
+                </header>
+
+                <div class="chat-scroll" id="chat-scroll">
+                    <div class="chat-messages" id="chat-messages"></div>
+                </div>
+
+                <div class="composer-wrap">
+                    <div class="composer" id="composer">
+                        <textarea id="chat-input" rows="1" placeholder="Message galaxypron..." aria-label="Message galaxypron"></textarea>
+                        <button class="send-btn" id="send-btn" aria-label="Send message">
+                            <svg viewBox="0 0 24 24"><path d="M3.4 20.4l20.6-8.4L3.4 3.6l-.1 6.5L17 12 3.3 13.9l.1 6.5z" fill="currentColor"/></svg>
+                        </button>
+                    </div>
+                    <p class="composer-caption">
+                        <span id="agent-status">Connecting...</span> can make mistakes. Check important info.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Learning View -->
+            <section id="view-learning" class="view">
+                <header class="topbar">
+                    <button class="sidebar-toggle" data-view="chat" aria-label="Back to chat">
+                        <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="currentColor"/></svg>
+                    </button>
+                    <div class="brand"><span class="brand-name">Learning Insights</span></div>
+                </header>
+                <div class="page-content">
+                    <div class="panel report-panel">
+                        <div class="report-head">
+                            <div>
+                                <h3>Weekly Brain Report 📊</h3>
+                                <p class="settings-desc">What I learned about you in the last 7 days.</p>
+                            </div>
+                            <a class="btn primary report-open" href="/mobile" target="_blank">Open on phone</a>
+                        </div>
+                        <div id="weekly-report"><div class="empty-state">Loading...</div></div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="panel">
+                            <h3>Top Websites</h3>
+                            <div id="top-domains"></div>
+                        </div>
+                        <div class="panel">
+                            <h3>Your Preferences</h3>
+                            <div id="preferences"></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <h3>Recent Browsing Activity</h3>
+                        <div id="recent-activity"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Browsing Patterns</h3>
+                        <div id="learning-patterns"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="view-settings" class="view">
+                <header class="topbar">
+                    <button class="sidebar-toggle" data-view="chat" aria-label="Back to chat">
+                        <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="currentColor"/></svg>
+                    </button>
+                    <div class="brand"><span class="brand-name">Settings</span></div>
+                </header>
+                <div class="page-content settings-page">
+                    <div class="settings-group">
+                        <label>Agent Name</label>
+                        <input type="text" id="agent-name" value="galaxypron" />
+                    </div>
+                    <div class="settings-group">
+                        <label>Personality</label>
+                        <select id="personality">
+                            <option value="helpful">Helpful</option>
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+                            <option value="witty">Witty</option>
+                        </select>
+                    </div>
+                    <div class="settings-group toggle-group">
+                        <div>
+                            <label>Enable Learning</label>
+                            <p class="settings-desc">Allow galaxypron to keep training on your browsing</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="learning-enabled" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <button class="btn primary" id="save-settings">Save Settings</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/static/js/main.js?v=gpu4"></script>
+</body>
+</html>
