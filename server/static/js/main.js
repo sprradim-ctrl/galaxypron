@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lightweight markdown renderer (bold, lists, line breaks)
     function renderMarkdown(text) {
         let html = escapeHtml(text);
-        html = html.replace(/^â€¢ (.*)$/gm, '<li>$1</li>');
+        html = html.replace(/^• (.*)$/gm, '<li>$1</li>');
         html = html.replace(/(?:<li>.*?<\/li>\n?)+/g, '<ul>$&</ul>');
         html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         // Render generated media (PNG images + GIF videos)
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sender === 'bot') {
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar';
-            avatar.textContent = 'ðŸª';
+            avatar.textContent = '🪐';
 
             const content = document.createElement('div');
             content.className = 'message-content';
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const typing = document.createElement('div');
         typing.className = 'message bot';
         typing.id = 'typing-msg';
-        typing.innerHTML = '<div class="message-avatar">ðŸª</div><div class="typing-indicator"><span></span><span></span><span></span></div>';
+        typing.innerHTML = '<div class="message-avatar">🪐</div><div class="typing-indicator"><span></span><span></span><span></span></div>';
         chatMessages.appendChild(typing);
         chatScroll.scrollTop = chatScroll.scrollHeight;
     }
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         welcome.className = 'welcome-screen';
         welcome.id = 'welcome-screen';
         welcome.innerHTML = `
-            <div class="welcome-logo">ðŸª</div>
+            <div class="welcome-logo">🪐</div>
             <h1>How can I help you today?</h1>
             <p>Ask galaxypron anything about your browsing, or let it train on your Microsoft Edge habits.</p>
             <div class="suggestion-grid">
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     prefKeys.forEach(cat => {
                         const chip = document.createElement('span');
                         chip.className = 'preference-chip';
-                        chip.textContent = `${cat} Â· ${preferences[cat].count}`;
+                        chip.textContent = `${cat} · ${preferences[cat].count}`;
                         wrap.appendChild(chip);
                     });
                     prefs.appendChild(wrap);
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ['Examples seen', data.examples_seen != null ? data.examples_seen.toLocaleString() : 0],
                     ['Epochs', data.epochs || 0],
                     ['Last loss', data.loss_history && data.loss_history.length
-                        ? data.loss_history[data.loss_history.length - 1] : 'â€”'],
+                        ? data.loss_history[data.loss_history.length - 1] : '—'],
                     ['Last trained', data.last_train || 'not yet']
                 ];
                 rows.forEach(([label, value]) => {
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .forEach(([cat, w]) => {
                             const chip = document.createElement('span');
                             chip.className = 'preference-chip';
-                            chip.textContent = `${cat} Â· ${Math.round(w * 100)}%`;
+                            chip.textContent = `${cat} · ${Math.round(w * 100)}%`;
                             catWrap.appendChild(chip);
                         });
                     info.appendChild(catWrap);
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTextModel(data.text_model);
             })
             .catch(() => {
-                document.getElementById('model-device').textContent = 'â€”';
+                document.getElementById('model-device').textContent = '—';
             });
     }
 
@@ -341,14 +341,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('tm-vocab').textContent = vocab.toLocaleString();
         document.getElementById('tm-epochs').textContent = epochs.toLocaleString();
         document.getElementById('tm-words').textContent = words.toLocaleString();
-        document.getElementById('tm-loss').textContent = loss != null ? loss.toFixed(4) : 'â€”';
+        document.getElementById('tm-loss').textContent = loss != null ? loss.toFixed(4) : '—';
 
         const pct = Math.min(100, (words / 100000) * 100);
         document.getElementById('tm-vocab-pct').textContent = pct.toFixed(1) + '%';
         document.getElementById('tm-words-bar').style.width = pct + '%';
         document.getElementById('tm-words-label').textContent =
             words.toLocaleString() + ' words trained across ' + vocab.toLocaleString() +
-            ' vocab words Â· ' + epochs.toLocaleString() + ' articles';
+            ' vocab words · ' + epochs.toLocaleString() + ' articles';
     }
 
     // Learning
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     visits.slice(-10).reverse().forEach(v => {
                         const item = document.createElement('div');
                         item.className = 'activity-item';
-                        item.textContent = `${formatTime(v.timestamp)} Â· ${v.title || v.url || 'Unknown'}`;
+                        item.textContent = `${formatTime(v.timestamp)} · ${v.title || v.url || 'Unknown'}`;
                         activity.appendChild(item);
                     });
                 }
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const notes = {
             learn: 'Controls the 24/7 Wikipedia learning speed (longer cycles, less waiting between sources).',
             cpu: 'Trains the neural network on the CPU.',
-            gpu: 'Uses the GPU via DirectML (CUDA first on NVIDIA) â€” the standard setting.',
+            gpu: 'Uses the GPU via DirectML (CUDA first on NVIDIA) — the standard setting.',
             'cpu+gpu': 'Uses the GPU when available (CUDA/DirectML), else runs on CPU.',
             grammar: 'Learns sentence patterns and connective-word usage from every ingested source.',
         };
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const desired = !running;
             // Immediate feedback so the button never looks unresponsive
             trainerToggle.disabled = true;
-            trainerToggle.textContent = running ? 'Stoppingâ€¦' : 'Startingâ€¦';
+            trainerToggle.textContent = running ? 'Stopping…' : 'Starting…';
             const stateEl = document.getElementById('tr-state');
             fetch('/api/system/trainer', {
                 method: 'POST',
@@ -564,13 +564,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reflect the *requested* state immediately, then poll for real one
                 trainerToggle.dataset.running = desired ? '1' : '0';
                 trainerToggle.textContent = desired ? 'Stop' : 'Start';
-                if (stateEl) stateEl.textContent = desired ? 'Trainingâ€¦' : 'Off';
+                if (stateEl) stateEl.textContent = desired ? 'Training…' : 'Off';
                 trainerToggle.disabled = false;
             })
             .catch(() => {
                 trainerToggle.disabled = false;
                 trainerToggle.textContent = running ? 'Stop' : 'Start';
-                if (stateEl) stateEl.textContent = 'Error â€” click Start to retry';
+                if (stateEl) stateEl.textContent = 'Error — click Start to retry';
             })
             .finally(() => refreshTrainer());
         });
@@ -591,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!flashBtn) return;
         flashBtn.classList.toggle('running', running);
         if (flashLabel) flashLabel.textContent = running ? 'Stop Learning' : 'Start Learning';
-        if (flashSub) flashSub.textContent = running ? 'Training is active â€” click to pause' : 'Power on 24/7 Wikipedia training';
+        if (flashSub) flashSub.textContent = running ? 'Training is active — click to pause' : 'Power on 24/7 Wikipedia training';
     }
 
     function refreshTrainer() {
@@ -626,16 +626,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const stateEl = document.getElementById('tr-state');
                 if (c.on_break) {
-                    stateEl.textContent = 'On break â€” ' + c.break_remaining + 's left';
+                    stateEl.textContent = 'On break — ' + c.break_remaining + 's left';
                 } else if (running) {
-                    stateEl.textContent = 'Trainingâ€¦';
+                    stateEl.textContent = 'Training…';
                 } else {
                     stateEl.textContent = 'Off';
                 }
                 // "Sources Downloaded this cycle" progress bar (goal = cycleGoal,
                 // then a break). The real count only rises in batch fetches, so we
                 // animate a smoothed counter toward it to climb continuously like
-                // 1,4,6,9,14â€¦ instead of snapping in 20/40/60 jumps.
+                // 1,4,6,9,14… instead of snapping in 20/40/60 jumps.
                 const cycleGoal = c.sources_per_cycle || 450;
                 const cycleNow = c.sources_since_break || 0;
                 runCycleCounter(running, cycleNow, cycleGoal, c.on_break, c.break_remaining);
@@ -675,13 +675,13 @@ document.addEventListener('DOMContentLoaded', () => {
             bar.style.width = pct + '%';
             if (pctEl) pctEl.textContent = Math.round(pct) + '%';
             labelEl.textContent = onBreak
-                ? 'On 25s break â€” ' + breakRemaining + 's left'
+                ? 'On 25s break — ' + breakRemaining + 's left'
                 : Math.round(next) + ' / ' + goal + ' sources (then 25s break)';
             if (Math.abs(tgt - next) > 0.5) {
                 _cycleAnim.raf = requestAnimationFrame(step);
             } else {
                 _cycleAnim.raf = 0;
-                if (onBreak) labelEl.textContent = 'On 25s break â€” ' + breakRemaining + 's left';
+                if (onBreak) labelEl.textContent = 'On 25s break — ' + breakRemaining + 's left';
             }
         };
         _cycleAnim.raf = requestAnimationFrame(step);
