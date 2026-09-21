@@ -392,10 +392,13 @@ class TextModel:
     """Word2vec text model that learns from every ingested Wikipedia article."""
 
     def __init__(self, data_dir, embed_dim=200, window=2, neg_samples=2, device='cpu',
-             vocab_cap=None):
+             vocab_cap=None, tier=None):
         self.data_dir = Path(data_dir)
-        self.vocab_file = self.data_dir / TEXT_VOCAB_PATH
-        self.checkpoint = self.data_dir / TEXT_MODEL_PATH
+        self.tier = tier
+        self.vocab_file = self.tier.cache(TEXT_VOCAB_PATH) if self.tier else \
+            self.data_dir / TEXT_VOCAB_PATH
+        self.checkpoint = self.tier.cache(TEXT_MODEL_PATH) if self.tier else \
+            self.data_dir / TEXT_MODEL_PATH
         self.embed_dim = embed_dim
         self.window = window
         self.neg_samples = neg_samples
@@ -612,17 +615,22 @@ class TextModel:
                         'loss_history': self.loss_history,
                         'last_train': self.last_train},
                        self.vocab_file)
+            if self.tier:
+                self.tier.schedule(TEXT_MODEL_PATH)
+                self.tier.schedule(TEXT_VOCAB_PATH)
         except Exception:
             pass
 
     def _load(self):
         try:
-            if self.checkpoint.exists():
-                state = torch.load(self.checkpoint, map_location='cpu',
+            cp = self.tier.read(TEXT_MODEL_PATH) if self.tier else self.checkpoint
+            vf = self.tier.read(TEXT_VOCAB_PATH) if self.tier else self.vocab_file
+            if cp.exists():
+                state = torch.load(cp, map_location='cpu',
                                    weights_only=False)
-                meta = torch.load(self.vocab_file, map_location='cpu',
+                meta = torch.load(vf, map_location='cpu',
                                   weights_only=False) \
-                    if self.vocab_file.exists() else {}
+                    if vf.exists() else {}
                 self.word2id = meta.get('word2id', {'<unk>': 0})
                 self.vocab_size = len(self.word2id)
                 self.model = Word2Vec(self._model_vocab(), self.embed_dim).to(self.device)

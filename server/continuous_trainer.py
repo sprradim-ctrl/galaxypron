@@ -100,9 +100,11 @@ class KnowledgeBase:
     checkpoint so learning persists across the 24/7 session and restarts.
     """
 
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, tier=None):
         self.data_dir = Path(data_dir)
-        self.file = self.data_dir / STATE_FILE
+        self.tier = tier
+        self.file = self.tier.read(STATE_FILE) if self.tier else self.data_dir / STATE_FILE
+        self.file_write = self.tier.cache(STATE_FILE) if self.tier else self.file
         self.vocab = Counter()       # word -> occurrences
         self.unigrams = Counter()    # word -> distinct articles seen in
         self.bigrams = Counter()     # (w1, w2) -> occurrences
@@ -166,9 +168,11 @@ class KnowledgeBase:
                 'connectors': dict(self.connectors),
                 'grammar_sentences': self.grammar_sentences,
             }
-            tmp = self.file.with_suffix('.json.tmp')
+            tmp = self.file_write.with_suffix('.json.tmp')
             tmp.write_text(json.dumps(state), encoding='utf-8')
-            tmp.replace(self.file)
+            tmp.replace(self.file_write)
+            if self.tier:
+                self.tier.schedule(STATE_FILE)
         except Exception:
             pass
 
@@ -270,14 +274,15 @@ class ContinuousTrainer:
     exists.
     """
 
-    def __init__(self, data_dir, train_mode='gpu'):
+    def __init__(self, data_dir, train_mode='gpu', tier=None):
         self.data_dir = Path(data_dir)
-        self.kb = KnowledgeBase(data_dir)
+        self.tier = tier
+        self.kb = KnowledgeBase(data_dir, tier=tier)
         # Fixed-size embedding tables: the DirectML allocator never reclaims
         # freed slabs, and an endlessly-growing vocab otherwise ratchets VRAM
         # up to the 4GB ceiling and OOMs. Capturing at 393216 keeps the model
         # ~1.6GB (CPU: RAM is plenty; GPU: fits — but see the note below).
-        self.text_model = TextModel(data_dir, vocab_cap=393216)
+        self.text_model = TextModel(data_dir, vocab_cap=393216, tier=tier)
         self.train_mode = train_mode
         # CPU is the fastest RELIABLE path: torch-directml leaks VRAM so any
         # sustained GPU softmax training dies in a few minutes and can even

@@ -13,6 +13,7 @@ from learning_engine import LearningEngine
 from training_engine import TrainingEngine
 from continuous_trainer import ContinuousTrainer
 from media_gen import MediaGenerator
+from storage_tier import TierStore
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,7 +52,29 @@ if _GALAXYPRON_SEED:
 
 learning_engine = LearningEngine(DATA_DIR)
 training_engine = TrainingEngine(DATA_DIR)
-continuous_trainer = ContinuousTrainer(DATA_DIR)
+
+# Tiered storage: the SSD cache dir above is the write target, the external
+# HDD gets a background mirror so nothing is lost if the SSD drive fills up.
+# Set GALAXYPRON_HDD_DIR to point at the archive drive/folder (default E:).
+TIER_ARTIFACTS = ('text_model.pt', 'text_vocab.json', 'knowledge.json')
+storage_tier = TierStore(DATA_DIR, os.environ.get('GALAXYPRON_HDD_DIR') or r'E:\galaxypron-data')
+if storage_tier.enabled:
+    storage_tier.mirror_all_now(TIER_ARTIFACTS)
+
+
+def _tier_sync_loop():
+    while True:
+        time.sleep(300)
+        try:
+            storage_tier.mirror_all_now(TIER_ARTIFACTS)
+        except Exception:
+            pass
+
+
+if storage_tier.enabled:
+    threading.Thread(target=_tier_sync_loop, daemon=True).start()
+
+continuous_trainer = ContinuousTrainer(DATA_DIR, tier=storage_tier if storage_tier.enabled else None)
 media_generator = MediaGenerator(GEN_DIR)
 agent = AIAgent(DATA_DIR, learning_engine, training_engine, media_generator=media_generator)
 
