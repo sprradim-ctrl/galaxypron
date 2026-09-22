@@ -1,6 +1,8 @@
 import os
+import sys
 import json
 import time
+import atexit
 import threading
 import logging
 from datetime import datetime
@@ -8,6 +10,8 @@ from pathlib import Path
 from flask import Flask, render_template, jsonify, request, send_from_directory, make_response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+from flask.json.provider import DefaultJSONProvider
+import math
 from agent_core import AIAgent
 from learning_engine import LearningEngine
 from training_engine import TrainingEngine
@@ -19,6 +23,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
+
+# Safe JSON: browsers' JSON.parse rejects the literal NaN/Infinity tokens that
+# json.dumps emits for non-finite floats (e.g. torch loss_history). Always emit
+# null instead so the web UI never chokes when the trainer reports a NaN loss.
+def _json_sanitize(o):
+    if isinstance(o, float) and not math.isfinite(o):
+        return None
+    if isinstance(o, dict):
+        return {k: _json_sanitize(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_json_sanitize(v) for v in o]
+    return o
+
+class _SafeJSONProvider(DefaultJSONProvider):
+    def dumps(self, obj, **kwargs):
+        return super().dumps(_json_sanitize(obj), **kwargs)
+
+app.json = _SafeJSONProvider(app)
+
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -30,6 +53,59 @@ DATA_DIR = Path(__file__).parent / 'data'
 _BUNDLED_DATA = DATA_DIR
 DATA_DIR = Path(os.environ.get('GALAXYPRON_DATA_DIR') or (DATA_DIR))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+# ---------------------------------------------------------------------------
+# Single-process guard: only ONE galaxypron server may run per machine, no
+# matter how many wrappers (script, scheduled task, packaged shell) try. A
+# second instance exits before it can touch the training files or steal the
+# HTTP port, preventing the dual-writer race on knowledge.json / text_model.pt.
+def _pid_alive(pid):
+    if os.name == 'nt':
+        import ctypes
+        h = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)
+        if not h:
+            return False
+        try:
+            status = ctypes.c_ulong()
+            ctypes.windll.kernel32.GetExitCodeProcess(h, ctypes.byref(status))
+            return status.value == 259
+        finally:
+            ctypes.windll.kernel32.CloseHandle(h)
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+_TEMP_DIR = Path(os.environ.get('TEMP') or os.environ.get('TMP') or '/tmp')
+SERVER_LOCK = _TEMP_DIR / 'galaxypron_server.lock'
+_OWN_LOCK = False
+
+
+def _acquire_server_lock():
+    global _OWN_LOCK
+    try:
+        if SERVER_LOCK.exists():
+            try:
+                _pid = int(SERVER_LOCK.read_text().strip())
+            except ValueError:
+                _pid = None
+            if _pid and _pid != os.getpid() and _pid_alive(_pid):
+                return False
+        SERVER_LOCK.write_text(str(os.getpid()))
+        _OWN_LOCK = True
+        atexit.register(lambda: SERVER_LOCK.unlink(missing_ok=True)
+                        if _OWN_LOCK else None)
+        return True
+    except Exception:
+        return True
+
+
+if not _acquire_server_lock():
+    logger.warning('Another galaxypron server instance is running (lock %s); exiting.',
+                   SERVER_LOCK)
+    sys.exit(0)
 
 GEN_DIR = Path(__file__).parent / 'generated'
 GEN_DIR = Path(os.environ.get('GALAXYPRON_GEN_DIR') or (GEN_DIR))
@@ -94,7 +170,9 @@ PUBLIC_MODE = os.environ.get('GALAXYPRON_PUBLIC', '') == '1'
 def _require_admin():
     if PUBLIC_MODE:
         return jsonify({'status': 'error', 'message': 'Forbidden'}), 403
-    if not ADMIN_KEY:
+    # The desktop window is a loopback client: it must be able to start/stop
+    # training and tune the model in the full build, so allow it without a key.
+    if not ADMIN_KEY or request.remote_addr in ('127.0.0.1', '::1', '::ffff:127.0.0.1'):
         return None
     if request.headers.get('X-Admin-Key', '') == ADMIN_KEY:
         return None
@@ -279,6 +357,47 @@ def set_mode():
 @app.route('/api/system/trainer', methods=['GET'])
 def trainer_status():
     return jsonify(continuous_trainer.status())
+
+@app.route('/api/debug/state', methods=['GET'])
+def debug_state():
+    """Diagnostics for 'nothing is showing / not training' reports."""
+    try:
+        st = continuous_trainer.status()
+    except Exception:
+        st = {}
+    kb = st.get('knowledge') or {}
+    tm = st.get('text_model') or {}
+    artifacts = {}
+    for n in TIER_ARTIFACTS:
+        row = {'ssd': None, 'hdd': None}
+        sp = storage_tier.cache(n)
+        if sp.exists():
+            row['ssd'] = [sp.stat().st_size, sp.stat().st_mtime]
+        if storage_tier.enabled:
+            hp = storage_tier.hdd / n
+            if hp.exists():
+                row['hdd'] = [hp.stat().st_size, hp.stat().st_mtime]
+        artifacts[n] = row
+    return jsonify({
+        'pid': os.getpid(),
+        'python': sys.executable,
+        'lock_owner': _OWN_LOCK,
+        'lock_file': str(SERVER_LOCK),
+        'data_dir': str(DATA_DIR),
+        'port': 5000,
+        'tier_enabled': storage_tier.enabled,
+        'hdd_dir': str(storage_tier.hdd) if storage_tier.enabled else None,
+        'trainer_running': bool(st.get('running')),
+        'started_at': st.get('started_at'),
+        'last_error': st.get('last_error'),
+        'articles_ingested': kb.get('articles_ingested', 0),
+        'vocabulary_size': kb.get('vocabulary_size', 0),
+        'total_words': kb.get('total_words', 0),
+        'text_examples_seen': tm.get('examples_seen', 0),
+        'text_words_trained': tm.get('words_trained', 0),
+        'text_vocab_size': tm.get('vocab_size', 0),
+        'artifacts': artifacts,
+    })
 
 @app.route('/api/system/train-control', methods=['GET'])
 def get_train_control():
